@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 AUTHOR = u'Gavin'
 SITENAME = u'LearnLog'
-SITEURL = ''
+SITEURL = 'http://doumadou.github.io'
 
 PATH = 'content'
 
@@ -44,6 +44,8 @@ PLUGINS = ['extract_headings']
 JINJA_EXTENSIONS = [
 				    'jinja2.ext.ExprStmtExtension',
 					]
+
+NIUX2_DUOSHUO_SHORTNAME="doumadou"
 
 # Uncomment following line if you want document-relative URLs when developing
 #RELATIVE_URLS = True
