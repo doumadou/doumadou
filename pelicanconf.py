@@ -25,6 +25,7 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
          ('Jinja2', 'http://jinja.pocoo.org/'),
          ('MarkDown语法', 'http://www.appinn.com/markdown/'),
 		 ('在线MarkDown', 'http://mahua.jser.me/'),
+		 ('Mysql开发手册', 'http://dev.mysql.com/doc/internals/en/index.html'),
 		 )
 
 # Social widget
