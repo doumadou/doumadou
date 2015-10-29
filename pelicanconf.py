@@ -26,6 +26,10 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
          ('MarkDown语法', 'http://www.appinn.com/markdown/'),
 		 ('在线MarkDown', 'http://mahua.jser.me/'),
 		 ('Mysql开发手册', 'http://dev.mysql.com/doc/internals/en/index.html'),
+		 ('Linux源码下载', 'https://www.kernel.org/pub/linux/kernel/'),
+		 ('Epel软件包下载', 'http://dl.fedoraproject.org/pub/epel/'),
+		 ('Linux软件包下载', 'ftp://195.220.108.108/linux/'),
+		 ('RPM包搜索引擎', 'http://rpmfind.net/linux/rpm2html/search.php')
 		 )
 
 # Social widget
