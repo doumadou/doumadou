@@ -29,7 +29,8 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
 		 ('Linux源码下载', 'https://www.kernel.org/pub/linux/kernel/'),
 		 ('Epel软件包下载', 'http://dl.fedoraproject.org/pub/epel/'),
 		 ('Linux软件包下载', 'ftp://195.220.108.108/linux/'),
-		 ('RPM包搜索引擎', 'http://rpmfind.net/linux/rpm2html/search.php')
+		 ('RPM包搜索引擎', 'http://rpmfind.net/linux/rpm2html/search.php'),
+		 ('AIX RPM包', 'http://www.oss4aix.org/download/RPMS'),
 		 )
 
 # Social widget
