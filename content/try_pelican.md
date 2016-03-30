@@ -12,6 +12,7 @@ Summary: try pelican write blog
 
 ##安装pelican, 及依赖
 
+    # apt-get install python-pip
     # pip install pelican
     # pip install markdown
 

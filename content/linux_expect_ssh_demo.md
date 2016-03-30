@@ -6,10 +6,12 @@ Date: 2015-10-09 17:32:13
 
 
 1. 处理Permission denied, please try again.
+
 2. timeout超时情况
+
 3.  expect: spawn id exp7 not open 通过第一个expect的eof退出处理
 
-###
+~~~ bash
 	#!/usr/bin/expect
 	
 	set VMIP [lindex $argv 0]
@@ -44,5 +46,5 @@ Date: 2015-10-09 17:32:13
 						}
 		}
 	}
+~~~
 
-###
