@@ -8,6 +8,30 @@ date: 2016-06-01 15:53:16
 
 # Mysql 介绍
 
+
+大体上说，数据库主要用于客户端进行DML操作，select用于查询数据，insert/update/delete用于插入/修改/删除数据，根据两类操作的比重不同，数据库可以分为两类：
+
+OLTP型：insert/update/delete 操作多于select
+
+OLAP型：select操作多于insert/update/delete
+
+ 
+
+        OLTP是事务型，是增删改比较多，事务小但数量多；OLAP是分析型的，查询比较多，查询数量少但运行时间通常较长。
+
+        对于分析性能问题时，对于把握数据库的主要操作进行归类比较重要，这样可以面对整个业务模型进行归类，化整为零，同时这点也要与上面的业务系统结合，只有了解和熟悉业务状态，才可以在数据库层面运维更好；
+
+        总之，感性认识就是指一个数据库是事务比较多，还是查询比较多。
+
+# 名词解释
+* DBMS: 数据库管理系统(Database Management System)
+* DML（data manipulation language）：
+       它们是SELECT、UPDATE、INSERT、DELETE，就象它的名字一样，这4条命令是用来对数据库里的数据进行操作的语言
+* DDL（data definition language）：
+       DDL比DML要多，主要的命令有CREATE、ALTER、DROP等，DDL主要是用在定义或改变表（TABLE）的结构，数据类型，表之间的链接和约束等初始化工作上，他们大多在建立表时使用
+* DCL（Data Control Language）：
+       是数据库控制功能。是用来设置或更改数据库用户或角色权限的语句，包括（grant,deny,revoke等）语句。在默认状态下，只有sysadmin,dbcreator,db_owner或db_securityadmin等人员才有权力执行DCL
+
 # 实验环境介绐
 
 docker + centos7.1 + mariadb 5.5
@@ -16,6 +40,20 @@ docker + centos7.1 + mariadb 5.5
 
 ## mysql源码安装
 ## mysql源码目录介绐
+
+## 默认数据库介绍
+mysql初始化数据文件后，会自动创建如下3个数据库。
+mysql;information_schema; performance_schema;
+information_schema: 保存着关于MySQL服务器所维护的所有其他数据库的信息。如数据库名，数据库的表，表栏的数据类型与访问权限等。
+简单地说，performance_schema数据库与PERFORMANCE_SCHEMA存储引擎一起实现mysql的Performance Schema，也就是mysql的性能监测机制。
+
+下面根据官方手册，给出Performance Schema这种性能监测机制的详细介绍。
+
+MySQL的Performance Schema是用来监测MySQL服务器执行功能的。它有以下特点：
+
+    Performance Schema提供了一种在运行时检查服务器内部执行的方式。它是通过使用PERFORMANCE_SCHEMA存储引擎和performance_schema数据库来实现的。它主要侧重于数据库的性能数据。这是不同于用于元数据检验的INFORMATION_SCHEMA的地方。
+    监视服务器事件。
+
 
 ## mysql 相关命令解读
 * mysql_install_db: 初始化mysql数据文件及创建系统表
@@ -35,6 +73,11 @@ drwx------ 2 mysql mysql  4096 Jun  3 01:24 performance_schema
 ```
 
 * mysqladmin:  mysql管理操作的客户端，通过它可以检查服务器的配置，当前运行状态，创建删除数据库，初始化root密码等。
+* mysqlhotcopy: 快速热备MYISAM引擎的工具(仅支持myisam). 
+1、前者是一个快速文件意义上的COPY，后者是一个数据库端的SQL语句集合。
+2、前者只能运行在数据库目录所在的机器上，后者可以用在远程客户端。
+3、相同的地方都是在线执行LOCK TABLES 以及 UNLOCK TABLES
+4、前者恢复只需要COPY备份文件到源目录覆盖即可，后者需要倒入SQL文件到原来库中。(source 或者\.或者 mysql < 备份文件)
 
 设置 root 密码 
 ```
@@ -47,11 +90,21 @@ drwx------ 2 mysql mysql  4096 Jun  3 01:24 performance_schema
 
 ```
 
-## mysql 配置文件my.cnf
+## mysql 配置参数
+
+binlog_cache_size: 为每个session 分配的内存，在事务过程中用来存储二进制日志的缓存。 可以提高bin-log的效率
+
 
 ## Mysql 数据文件
+   *.frm是描述了表的结构，*.MYD保存了表的数据记录，*.MYI则是表的索引
+
+innodb:
+    ibdata1:默认表空间文件，如果没有设置innodb_file_per_table，则所有的表都是共用同一个文件的。如果启动了innodb_file_per_table，每张表的索引、数据和插入缓冲BITMAP信息是按照表分别独立存放在不同的文件中，但是undo log等其他信息还是存放在默认表空间中。
+	*.idb: 当设置innodb_file_per_table时，每个表的表空间文件. 表文件，存放每张表的数据、索引和插入缓冲。
+	ib_logfile0: 重做日志文件，备份前记录的LSN和备份结束时的LSN之间的redo log xtrabackup是需要保存的，用于在恢复时进行回放或者回滚。
 
 ## mysql 多实例
+
 
 
 # 二进制日志
@@ -67,6 +120,39 @@ log_bin=/tmp/mysql-bin #默认无此项，表示binlog 没有开启，加入此�
 
 .index : 文件里记录了有哪些binlog文件 
 .0000*: 真实的binlog文件，使用mysqlbinlog /tmp/mysql-bin.000001 可输出成sql格式的内容。
+
+## 二进制日志格式
+Mysql binlog日志有三种格式，分别为Statement,MiXED,以及ROW！, 默认为Statement, 推荐使用MiXED.
+配置项(my.cnf)
+binlog_format           = MIXED                 //binlog日志格式
+1.Statement：每一条会修改数据的sql都会记录在binlog中。
+
+优点：不需要记录每一行的变化，减少了binlog日志量，节约了IO，提高性能。(相比row能节约多少性能与日志量，这个取决于应用的SQL情况，正常同一条记录修改或者插入row格式所产生的日志量还小于Statement产生的日志量，但是考虑到如果带条件的update操作，以及整表删除，alter表等操作，ROW格式会产生大量日志，因此在考虑是否使用ROW格式日志时应该跟据应用的实际情况，其所产生的日志量会增加多少，以及带来的IO性能问题。)
+
+缺点：由于记录的只是执行语句，为了这些语句能在slave上正确运行，因此还必须记录每条语句在执行的时候的一些相关信息，以保证所有语句能在slave得到和在master端执行时候相同 的结果。另外mysql 的复制,像一些特定函数功能，slave可与master上要保持一致会有很多相关问题(如sleep()函数， last_insert_id()，以及user-defined functions(udf)会出现问题).
+
+使用以下函数的语句也无法被复制：
+
+* LOAD_FILE()
+
+* UUID()
+
+* USER()
+
+* FOUND_ROWS()
+
+* SYSDATE() (除非启动时启用了 --sysdate-is-now 选项)
+
+同时在INSERT ...SELECT 会产生比 RBR 更多的行级锁
+
+2.Row:不记录sql语句上下文相关信息，仅保存哪条记录被修改。
+
+优点： binlog中可以不记录执行的sql语句的上下文相关的信息，仅需要记录那一条记录被修改成什么了。所以rowlevel的日志内容会非常清楚的记录下每一行数据修改的细节。而且不会出现某些特定情况下的存储过程，或function，以及trigger的调用和触发无法被正确复制的问题
+
+缺点:所有的执行的语句当记录到日志中的时候，都将以每行记录的修改来记录，这样可能会产生大量的日志内容,比如一条update语句，修改多条记录，则binlog中每一条修改都会有记录，这样造成binlog日志量会很大，特别是当执行alter table之类的语句的时候，由于表结构修改，每条记录都发生改变，那么该表每一条记录都会记录到日志中。
+
+3.Mixed: 是以上两种level的混合使用，一般的语句修改使用statment格式保存binlog，如一些函数，statement无法完成主从复制的操作，则采用row格式保存binlog,MySQL会根据执行的每一条具体的sql语句来区分对待记录的日志形式，也就是在Statement和Row之间选择一种.新版本的MySQL中队row level模式也被做了优化，并不是所有的修改都会以row level来记录，像遇到表结构变更的时候就会以statement模式来记录。至于update或者delete等修改数据的语句，还是会记录所有行的变更。
+
 
 ## 管理二进制日志
 
@@ -338,6 +424,9 @@ slow_query_log_file=/tmp/slow_query_log.log
 
 # MYIASM
 # Innodb
+## 特点
+* 支持事务
+* 行级锁
 ## undo/redo log 日志原理
 
 ### redolog
@@ -373,9 +462,21 @@ Dirtypage何时flush到disk上:
 # Mysql体系结构
 
 # 用户管理
+* 远程授权访问
+```
+mysql> GRANT ALL ON *.* TO root@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
+```
 # mysqldump备份数据库
 
 # 数据库备份与恢复
+
+## mysqldump 逻辑备份
+## mysqlhotcopy
+## XtraBackup
+XtraBackup是Percona公司一款开源的数据库备份软件，相对于mysqldump，它是直接通过拷贝物理文件实现数据库备份的，所以速度相比要快很多。XtraBackup包含两部分：xtrabackup的c程序和innobackupex perl脚本；前者主要用于处理innodb表的备份；后者是前者的封装，主要包括一些与MySQL服务器的通信和mysiam表的备份
+* 无锁备份
+###实现原理 
+基于InnoDB对事务的支持，利用其崩溃恢复的功能来实现的。
 
 # 数据主从同步
 ## 同步原理
@@ -383,6 +484,77 @@ Dirtypage何时flush到disk上:
 #实例:  mysql + lvs + keeplived实现读操作负载均衡
 
 # 数据库事务
+       1.原子性
+          组成事务的一组sql命令形成了一个逻辑单元，不能只执行其中的一部分。
+      2.一致性
+          在事务处理前后，数据库的数据是一致的（数据库的数据完成行约束）。
+      3.隔离性
+          一个事务处理对另一个事务处理的影响。
+      4.持续性
+          事务处理的效果能够被永久保留下来 
+## 多版本并发控制（MVCC）
+## Mysql隔离级别(Isolation)
+隔离级别规则了一个事务所做的修改在哪些事务内和事务间是可见的，哪些是不可见的。
+下文对隔离级别的说明都是基于锁机制并发控制的数据库管理系统而言的
+由ANSI/ISO定义的SQL-92标准定义的四种隔离级别
+1.Read Uncommitted
+	末提交读，也称为脏读(dirty read). 一个事务可以读到其它事务末提交的更改。
+2.Read Committed
+	提交读，也称不可重复读。
+3.Repeatable Read
+    可重复读, 该级别保证同一事务中多次读取同样的记录的结果是一致的。 是mysql默认事务隔离级别
+	REPEATABLE READ：在mysql中，不会出现幻读。mysql的实现和标准定义的RR隔离级别有差别。
+4.Serializable
+	可序列化， 是最高级别的隔离.
+	实现可序列化要求在选定的对象上的读锁和写锁保持到事务结束才能释放. 在select 查询中使用一个where子句来描述范围时应获得一个"范围锁(rang-locks)"。这种机制可以避免“幻影读(phantom reads)”现象
+
+
+事务具有ACID四种特性。
+
+但是Isolation并发可能引起如下问题：
+
+1.脏读
+
+允许读取到未提交的脏数据。
+
+2.不可重复读
+
+如果你在时间点T1读取了一些记录，在T2时再想重新读取一次同样的这些记录时，这些记录可能已经被改变、或者消失不见。
+
+3.幻读
+
+解决了不重复读，保证了同一个事务里，查询的结果都是事务开始时的状态（一致性）。但是，如果另一个事务同时提交了新数据，本事务再更新时，就会“惊奇的”发现了这些新数据，貌似之前读到的数据是“鬼影”一样的幻觉。
+
+隔离解别 	脏读 	不可重复读 	幻读
+Read Uncommitted 	Y 	Y 	Y
+Read Committed 	N 	Y 	Y
+Repeatable(default) 	N 	N 	Y
+Serializable 	N 	N 	N
+
+
+
+### 查看及修改隔离级别
+```
+Session 1:
+mysql> set global tx_isolation='read-uncommitted';  
+Query OK, 0 rows affected (0.00 sec)  
+mysql> select @@global.tx_isolation,@@tx_isolation;  
++-----------------------+------------------+  
+| @@global.tx_isolation | @@tx_isolation   |  
++-----------------------+------------------+  
+| READ-UNCOMMITTED      | READ-UNCOMMITTED |  
++-----------------------+------------------+  
+1 row in set (0.00 sec)  
+  
+Session 2:  
+mysql> select @@global.tx_isolation, @@tx_isolation;  
++-----------------------+-----------------+  
+| @@global.tx_isolation | @@tx_isolation  |  
++-----------------------+-----------------+  
+| READ-UNCOMMITTED      | REPEATABLE-READ |  
++-----------------------+-----------------+  
+1 row in set (0.00 sec)  
+```
 
 查看数库的大小
 
@@ -398,6 +570,86 @@ mysql> select table_schema as 'Db Name', Round(Sum(data_length + index_length) /
 +--------------------+--------------+-----------------+
 5 rows in set (0.01 sec)
 
+
+# Mysql 性能分析
+
+## explain
+```
+MariaDB [test]> explain select * from tb1;
++------+-------------+-------+------+---------------+------+---------+------+------+-------+
+| id   | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra |
++------+-------------+-------+------+---------------+------+---------+------+------+-------+
+|    1 | SIMPLE      | tb1   | ALL  | NULL          | NULL | NULL    | NULL |    2 |       |
++------+-------------+-------+------+---------------+------+---------+------+------+-------+
+1 row in set (0.00 sec)
+
+MariaDB [test]> explain select * from tb1 where id=1;
++------+-------------+-------+-------+---------------+---------+---------+-------+------+-------+
+| id   | select_type | table | type  | possible_keys | key     | key_len | ref   | rows | Extra |
++------+-------------+-------+-------+---------------+---------+---------+-------+------+-------+
+|    1 | SIMPLE      | tb1   | const | PRIMARY       | PRIMARY | 4       | const |    1 |       |
++------+-------------+-------+-------+---------------+---------+---------+-------+------+-------+
+1 row in set (0.00 sec)
+
+```
+各个属性值的含义:
+
+id : select 查询的序列号。
+select_type: select查询的类型，主要是区别普通查询和联合查询、子查询之类的复杂查询。
+table: 输出的行所引用的表。
+type : 联合查询所使用的类型。
+type显示的是访问类型，是较为重要的一个指标，结果值从好到坏依次是：
+system > const > eq_ref > ref > fulltext > ref_or_null > index_merge > unique_subquery > index_subquery > range > index > ALL
+一般来说，得保证查询至少达到range级别，最好能达到ref。
+possible_keys: 指写mysql使用哪个索引在表中找到相应的行。 如果是空的，没有相关的索引。这时要提高性能，可通过检验WHERE子句，看是否引用某些字段，或者检查字段不是适合索引。
+key:  实际使用的健，若为null, 表示没有索引被选择。
+key_len: 显示MySQL决定使用的键长度。如果键是NULL，长度就是NULL。文档提示特别注意这个值可以得出一个多重主键里mysql实际使用了哪一部分。
+ref: 显示哪个字段或常数与key一起被使用。
+rows : 这个数表示mysql要遍历多少数据才能找到，在innodb上是不准确的。
+```
+MariaDB [test]> explain select count(*) from tb5;select count(*) from tb5;
++------+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
+| id   | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | Extra       |
++------+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
+|    1 | SIMPLE      | tb5   | index | NULL          | PRIMARY | 4       | NULL |  904 | Using index |
++------+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
+1 row in set (0.00 sec)
+
++----------+
+| count(*) |
++----------+
+|     1000 |
++----------+
+1 row in set (0.00 sec)
+
+MariaDB [test]> show create table tb5;
++-------+---------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                          |
++-------+---------------------------------------------------------------------------------------------------------------------------------------+
+| tb5   | CREATE TABLE `tb5` (
+  `id` int(11) NOT NULL,
+  `col` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 |
++-------+---------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+```
+Extra: 
+
+如果是Only index，这意味着信息只用索引树中的信息检索出的，这比扫描整个表要快。
+
+如果是where used，就是使用上了where限制。
+
+如果是impossible where 表示用不着where，一般就是没查出来啥。
+
+如果此信息显示Using filesort或者Using temporary的话会很吃力，WHERE和ORDER BY的索引经常无法兼顾，如果按照WHERE来确定索引，那么在ORDER BY时，就必然会引起Using filesort，这就要看是先过滤再排序划算，还是先排序再过滤划算。
+
+
+type=const表示通过索引一次就找到了；
+key=primary的话，表示使用了主键；
+type=all,表示为全表扫描；
+key=null表示没用到索引。type=ref,因为这时认为是多个匹配行，在联合查询中，一般为REF。
 
 
 # Mysql优化原则
@@ -448,3 +700,13 @@ mysql> select table_schema as 'Db Name', Round(Sum(data_length + index_length) /
 2）MySQL有查询缓存的功能，服务器会保存查询语句和相应的返回结果来减少相同的查询造成的服务器开销，可以通过设置query_cache_size设置查询缓存的大小，0表示关闭查询缓存，但是值得注意的是，一旦该表有更新，则所有的查询缓存都会失效，默认情况下，MySQL是关闭查询缓存的；
 
 3）可以通过配置max_connections设置数据库的最大连接数，wait_timeout设置连接最长保留时间，该时间单位是s, MySQL默认是8个小时，一旦超过8个小时，数据库会自动断开该连接，这点在使用数据库连接池时由为需要注意，因为连接池中的连接可能已经被服务器断开了，到那时连接池不知道，应用在从连接池中获取到该连接使用时就会出错，max_connect_errors配置如果应用出现多次异常，则会终止主机连接数据库；
+
+
+# 故障解决
+
+## 表误册数据
+
+* )将delete from tb where ? 写成delete from tb;
+解决方法，通过bin log 恢复。 
+原理： mysqlbinlog
+前提： innodb。且mysql开启了bin log日志
