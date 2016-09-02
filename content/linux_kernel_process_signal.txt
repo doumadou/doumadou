@@ -1,0 +1,11 @@
+---
+layout: post
+title: 
+category: 
+tags: []
+date: 2016-05-12 09:40:38
+---
+
+linux-3.10.94
+kill: ->kill_something_info  -->kill_pid_info -->group_send_sig_info (check_kill_permission) -->do_send_sig_info --> send_signal -->__send_signal
+tkill/tgkill: -->do_tkill                     -->do_send_specific(check_kill_permission)     -->do_send_sig_info --> send_signal -->__send_signal
