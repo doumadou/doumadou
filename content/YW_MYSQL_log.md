@@ -651,6 +651,15 @@ key=primary的话，表示使用了主键；
 type=all,表示为全表扫描；
 key=null表示没用到索引。type=ref,因为这时认为是多个匹配行，在联合查询中，一般为REF。
 
+# 集群
+## 主从复制集群
+```
+show slave status\G
+```
+Relay_Master_Log_File: 跟Master_Log_File比对吧，Relay_Master_Log_File是否跟得上Master_Log_File。
+
+主从复制延时分析
+
 
 # Mysql优化原则
 ## sql语句的优化
@@ -661,6 +670,7 @@ key=null表示没用到索引。type=ref,因为这时认为是多个匹配行，
 * 对于区分度不大的字段，就避免建立索引
 
 * 尽量使用exists/not exists 代替in, not in； 因为后者很有可能会导致全表扫描而放弃索引
+* 用EXISTS替换DISTINCT
 * 尽量避免在where子句中对子段进行NULL判断，因为NULL判断会导致全表扫描
 * 尽量避免在where子句中使用or作为连接条件, 同样也会导致全局扫描
 * 尽量避免在where子句中使用!= 或 <> 操作符, 同样也会导致全局扫描
@@ -674,6 +684,12 @@ key=null表示没用到索引。type=ref,因为这时认为是多个匹配行，
 * From子句中表的出现顺序同样会对SQL语句的执行性能造成影响，From子句在解析时是从后向前的，即写在末尾的表将被优先处理，应该选择记录较少的表作为基表放在后面，同时如果出现3个及3个以上的表连接查询时，应该将交叉表作为基表；
 
 * 尽量使用>=操作符代替>操作符，例如，如下SQL语句，select dbInstanceIdentifier  from DBInstance where id > 3，该语句应该替换成 select dbInstanceIdentifier from DBInstance where id >=4 ，两个语句的执行结果是一样的，但是性能却不同，后者更加 高效，因为前者在执行时，首先会去找等于3的记录，然后向前扫描，而后者直接定位到等于4的记录。
+
+### 慢查询分析
+
+* mysqldumpslow
+* mysqlsla
+* pt-query-digest
 
   explain 可用于优化分析
 ## 数据表结构的优化
@@ -710,3 +726,5 @@ key=null表示没用到索引。type=ref,因为这时认为是多个匹配行，
 解决方法，通过bin log 恢复。 
 原理： mysqlbinlog
 前提： innodb。且mysql开启了bin log日志
+
+## 主从同步出错
