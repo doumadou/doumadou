@@ -90,6 +90,14 @@ drwx------ 2 mysql mysql  4096 Jun  3 01:24 performance_schema
 
 ```
 
+修改 root 密码
+
+```
+# mysqladmin -uroot -p password newpasswordSTR
+Enter password: ******
+```
+
+
 ## mysql 配置参数
 
 binlog_cache_size: 为每个session 分配的内存，在事务过程中用来存储二进制日志的缓存。 可以提高bin-log的效率
@@ -509,7 +517,7 @@ XtraBackup是Percona公司一款开源的数据库备份软件，相对于mysqld
 	实现可序列化要求在选定的对象上的读锁和写锁保持到事务结束才能释放. 在select 查询中使用一个where子句来描述范围时应获得一个"范围锁(rang-locks)"。这种机制可以避免“幻影读(phantom reads)”现象
 
 
-事务具有ACID四种特性。
+事务具有ACID四种特性。(原子性（Atomicity）、一致性（Consistency）、隔离性（Isolation）、持久性（Durability）)
 
 但是Isolation并发可能引起如下问题：
 

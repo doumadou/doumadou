@@ -16,6 +16,8 @@ date: 2016-05-27 17:21:38
 
 dumphive的下载地址为http://gitorious.com/canaima-gnu-linux/dumphive/commits/upstream
 
+或http://bazaar.launchpad.net/~guadalinex-members/dumphive/trunk/revision/1?start_revid=1
+
 使用步骤如下:
 
 1. 安装依赖
@@ -35,3 +37,20 @@ dumphive使用由Pascal语言写出的，所以要下载free Pascal的编译器�
 
 注: windows2008的注册表文件位于 c:\\Windows\\System32\\config\\SYSTEM
 
+
+centos安装:
+
+https://www.freepascal.org/down/x86_64/linux.var 进入http://sourceforge.net/projects/freepascal/files/Linux/3.0.2 下载rpm包
+
+[root@10 taoxie]# rpm -ivh fpc-3.0.2-1.x86_64.rpm 
+Preparing...                          ################################# [100%]
+Updating / installing...
+   1:fpc-3.0.2-1                      ################################# [100%]
+Running on linux
+Write permission in /etc.
+Writing sample configuration file to /etc/fpc.cfg
+Writing sample configuration file to /usr/lib64/fpc/3.0.2/ide/text/fp.cfg
+Writing sample configuration file to /usr/lib64/fpc/3.0.2/ide/text/fp.ini
+Writing sample configuration file to /etc/fppkg.cfg
+Writing sample configuration file to /etc/fppkg/default
+`

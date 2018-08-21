@@ -77,3 +77,8 @@ total 136940
 原因分析:
 	char与varchar的区别
 
+
+
+时间整数转字符串
+sqlite
+SELECT datetime(1484188679, 'unixepoch', 'localtime')
